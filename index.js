@@ -1,6 +1,6 @@
 // содежимое index.js
 const http = require('http');
-const port = 3000;
+const port = process.env.PORT || 8080;
 const requestHandler = (request, response) => {
     console.log(request.url);
     response.end('Hello Node.js Server!');

@@ -8,13 +8,7 @@ module.exports = {
     Models: {},
     connect() {
         if (process.env.DATABASE_URL) {
-            this.sequelize = new Sequelize(process.env.DATABASE_URL, {
-                dialect:  'postgres',
-                protocol: 'postgres',
-                port:     match[4],
-                host:     match[3],
-                logging:  false
-            });
+            this.sequelize = new Sequelize(process.env.DATABASE_URL);
         }
         else {
             this.sequelize = new Sequelize('SushiBarBack', 'postgres', null, {

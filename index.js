@@ -19,7 +19,7 @@ const bodyParser = require('body-parser');
 const app = express();
 
 let db = require('./db');
-db.connect();
+//db.connect();
   
 
 const port = process.env.PORT || 3001;

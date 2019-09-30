@@ -1,4 +1,7 @@
 module.exports = function(app, db) {
+    app.get('/test', async (req, res) => {
+        res.send(`DB url ${process.env.DATABASE_URL}`);
+    }),
     app.post('/goods/create', async (req, res) => {
         await db.Models.Sushi.create({
             name: req.body.name,

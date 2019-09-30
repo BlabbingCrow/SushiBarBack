@@ -7,6 +7,7 @@ module.exports = {
     sequelize: null,
     Models: {},
     connect() {
+        //process.env.DATABASE_URL
         this.sequelize = new Sequelize('SushiBarBack', 'postgres', null, {
             host: 'localhost',
             dialect: 'postgres'

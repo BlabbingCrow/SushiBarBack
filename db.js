@@ -7,11 +7,21 @@ module.exports = {
     sequelize: null,
     Models: {},
     connect() {
-        //process.env.DATABASE_URL
-        this.sequelize = new Sequelize('SushiBarBack', 'postgres', null, {
-            host: 'localhost',
-            dialect: 'postgres'
-        });
+        if (process.env.DATABASE_URL) {
+            this.sequelize = new Sequelize(process.env.DATABASE_URL, {
+                dialect:  'postgres',
+                protocol: 'postgres',
+                port:     match[4],
+                host:     match[3],
+                logging:  false
+            });
+        }
+        else {
+            this.sequelize = new Sequelize('SushiBarBack', 'postgres', null, {
+                host: 'localhost',
+                dialect: 'postgres'
+            });
+        }
 
         fs.readdirSync(__dirname + "/models").forEach(file => {
             console.log(`[DATABASE] --${file}`);

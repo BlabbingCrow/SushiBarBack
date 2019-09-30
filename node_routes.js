@@ -1,6 +1,6 @@
 module.exports = function(app, db) {
-    app.get('/test', async (req, res) => {
-        res.send(`DB url ${process.env.DATABASE_URL}\n DB BRONZE ${process.env.HEROKU_POSTGRESQL_BRONZE_URL}`);
+    app.get('/testdb', async (req, res) => {
+        res.send(`DB url ${process.env.DATABASE_URL}`);
     }),
     app.post('/goods/create', async (req, res) => {
         await db.Models.Sushi.create({

@@ -1,4 +1,9 @@
 module.exports = function(app, db) {
+    app.use(function(req, res, next) {
+        res.header("Access-Control-Allow-Origin", "https://sushibar.herokuapp.com/"); // update to match the domain you will make the request from
+        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+        next();
+    }),
     app.get('/testdb', async (req, res) => {
         res.send(`DB url ${process.env.DATABASE_URL}`);
     }),

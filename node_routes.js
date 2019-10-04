@@ -2,6 +2,10 @@ module.exports = function(app, db) {
     app.get('/testdb', async (req, res) => {
         res.send(`DB url ${process.env.DATABASE_URL}`);
     }),
+    app.get('/goods', async (req, res) => {
+        let sushi = await db.Models.Sushi.find();
+        res.send(sushi);
+    });
     app.post('/goods/create', async (req, res) => {
         await db.Models.Sushi.create({
             name: req.body.name,

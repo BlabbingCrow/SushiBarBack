@@ -3,19 +3,19 @@ module.exports = function(app, db) {
         res.send(`DB url ${process.env.DATABASE_URL}`);
     }),
     app.get('/goods', async (req, res) => {
-        let sushi = await db.Models.Sushi.find();
-        res.send(sushi);
+        let products = await db.Models.Sushi.findAll();
+        res.send(products);
     });
     app.post('/goods/create', async (req, res) => {
-        await db.Models.Sushi.create({
+        let product = await db.Models.Sushi.create({
             name: req.body.name,
             description: req.body.description,
             price: parseInt(req.body.price),
         });
-        res.send('Created');
+        res.send(product);
     });
     app.post('/goods/update', async (req, res) => {
-        await db.Models.Sushi.update({
+        let product = await db.Models.Sushi.update({
             name: req.body.name,
             description: req.body.description,
             price: parseInt(req.body.price),
@@ -24,7 +24,7 @@ module.exports = function(app, db) {
                 id: parseInt(req.body.id),
             } 
         });
-        res.send('Updated');
+        res.send(true);
     });
     app.post('/goods/delete', async (req, res) => {
         await db.Models.Sushi.destroy({
@@ -32,6 +32,6 @@ module.exports = function(app, db) {
                 id: parseInt(req.body.id),
             } 
         });
-        res.send('Deleted');
+        res.send(true);
     });
 };

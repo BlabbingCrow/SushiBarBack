@@ -16,6 +16,9 @@ module.exports = (sequelize, DataTypes) => {
         price: {
             type: Sequelize.INTEGER,
         },
+        url: {
+            type: Sequelize.STRING,
+        },
     }, { timestamps: false });
 
     return model;

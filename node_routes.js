@@ -1,7 +1,7 @@
 module.exports = function(app, db) {
     app.use(function(req, res, next) {
-        res.header("Access-Control-Allow-Origin", "http://localhost:4200");
-        //res.header("Access-Control-Allow-Origin", "https://sushibar.herokuapp.com");
+        //res.header("Access-Control-Allow-Origin", "http://localhost:4200");
+        res.header("Access-Control-Allow-Origin", "https://sushibar.herokuapp.com");
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
         next();
     }),
@@ -16,7 +16,7 @@ module.exports = function(app, db) {
         let object = convertToObj(req.body);
         
         let price = parseInt(object.price);
-        if (object.name == null || object.description == null || isNaN(price)) return res.send(false);
+        if (object.name == null || object.description == null || isNaN(price) || object.url == null) return res.send(false);
         let product = await db.Models.Sushi.create({
             name: object.name,
             description: object.description,
@@ -26,24 +26,31 @@ module.exports = function(app, db) {
         res.send(product);
     });
     app.post('/goods/update', async (req, res) => {
-        if (req.body.name == null || req.body.description == null || isNaN(parseInt(req.body.price))) return res.send(false);
+        let object = convertToObj(req.body);
+
+        let id = parseInt(object.id);
+        let price = parseInt(object.price);
+        if (isNaN(id) || object.name == null || object.description == null || isNaN(price) || object.url == null) return res.send(false);
         let product = await db.Models.Sushi.update({
-            name: req.body.name,
-            description: req.body.description,
-            price: parseInt(req.body.price),
-            url: req.body.url,
+            name: object.name,
+            description: object.description,
+            price: price,
+            url: object.url,
         }, {
             where: {
-                id: parseInt(req.body.id),
+                id: id,
             } 
         });
-        res.send(true);
+        res.send(product);
     });
     app.post('/goods/delete', async (req, res) => {
-        if (isNaN(parseInt(req.body.id))) return res.send(false);
+        let object = convertToObj(req.body);
+
+        let id = parseInt(object.id);
+        if (isNaN(id)) return res.send(false);
         await db.Models.Sushi.destroy({
             where: {
-                id: parseInt(req.body.id),
+                id: id,
             } 
         });
         res.send(true);

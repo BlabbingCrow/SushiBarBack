@@ -1,7 +1,11 @@
 module.exports = function(app, db) {
     app.use(function(req, res, next) {
-        //res.header("Access-Control-Allow-Origin", "http://localhost:4200");
-        res.header("Access-Control-Allow-Origin", "https://sushibar.herokuapp.com");
+        if (process.env.DATABASE_URL) {
+            res.header("Access-Control-Allow-Origin", "https://sushibar.herokuapp.com");
+        }
+        else {
+            res.header("Access-Control-Allow-Origin", "http://localhost:4200");
+        }
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
         next();
     }),

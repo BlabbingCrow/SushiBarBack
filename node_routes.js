@@ -45,7 +45,7 @@ module.exports = function(app, db) {
                 id: id,
             } 
         });
-        res.send(product);
+        res.send(object);
     });
     app.post('/goods/delete', async (req, res) => {
         let object = convertToObj(req.body);

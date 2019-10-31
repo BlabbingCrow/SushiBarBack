@@ -1,3 +1,6 @@
+let jwt = require('jsonwebtoken');
+const secretKey = "myTestSecretKey";
+
 module.exports = function(app, db) {
     app.use(function(req, res, next) {
         if (process.env.DATABASE_URL) {
@@ -6,58 +9,137 @@ module.exports = function(app, db) {
         else {
             res.header("Access-Control-Allow-Origin", "http://localhost:4200");
         }
-        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
         next();
     }),
     app.get('/testdb', async (req, res) => {
         res.send(`DB url ${process.env.DATABASE_URL}`);
     }),
-    app.get('/goods', async (req, res) => {
-        let products = await db.Models.Sushi.findAll();
-        res.send(products);
+
+    app.post('/login', async (req, res) => {
+        let object = convertToObj(req.body);
+        let user = await db.Models.User.findOne({
+            where: {
+                login: object.login,
+                password: object.password
+            }
+        });
+        if (user != null) {
+            user.token = jwt.sign({ login: object.login, isAdmin: user.isAdmin }, secretKey);
+            await user.save();
+            res.send({
+                login: user.login,
+                token: user.token
+            });
+        }
+        else {
+            res.send(false);
+        }
     });
-    app.post('/goods/create', async (req, res) => {
+    app.post('/register', async (req, res) => {
         let object = convertToObj(req.body);
         
-        let price = parseInt(object.price);
-        if (object.name == null || object.description == null || isNaN(price) || object.url == null) return res.send(false);
-        let product = await db.Models.Sushi.create({
-            name: object.name,
-            description: object.description,
-            price: price,
-            url: object.url,
+        let user = await db.Models.User.findOne({
+            where: {
+                login: object.login
+            }
         });
-        res.send(product);
+        if (user == null) {
+            let newUser = await db.Models.User.create({
+                login: object.login,
+                password: object.password,
+                isAdmin: false,
+                token: jwt.sign({
+                    login: object.login,
+                    isAdmin: false
+                }, secretKey)
+            });
+            //set cockie
+            res.send({
+                login: newUser.login,
+                isAdmin: object.isAdmin,
+                token: newUser.token
+            });
+            
+        }
+        else {
+            res.send(false);
+        }
+    });
+
+    app.post('/goods', async (req, res) => {
+        let object = convertToObj(req.body);
+        if (object.pageName == "admin") {
+            jwt.verify(object.token, secretKey, async function(err, decoded) {
+                if (err) return res.send(false);
+                if (!decoded.isAdmin) return res.send(false);
+                let products = await db.Models.Sushi.findAll();
+                res.send(products);
+            });
+        }
+        else {
+            let products = await db.Models.Sushi.findAll();
+            res.send(products);
+        }
+    });
+    
+    app.post('/goods/create', async (req, res) => {
+        let object = convertToObj(req.body);
+
+        jwt.verify(object.token, secretKey, async function(err, decoded) {
+            if (err) return res.send(false);
+            if (!decoded.isAdmin) return res.send(false);
+            object = object.data;
+            let price = parseInt(object.price);
+            if (object.name == null || object.description == null || isNaN(price) || object.url == null) return res.send(false);
+            let product = await db.Models.Sushi.create({
+                name: object.name,
+                description: object.description,
+                price: price,
+                url: object.url,
+            });
+            res.send(product);
+        });
     });
     app.post('/goods/update', async (req, res) => {
         let object = convertToObj(req.body);
 
-        let id = parseInt(object.id);
-        let price = parseInt(object.price);
-        if (isNaN(id) || object.name == null || object.description == null || isNaN(price) || object.url == null) return res.send(false);
-        let product = await db.Models.Sushi.update({
-            name: object.name,
-            description: object.description,
-            price: price,
-            url: object.url,
-        }, {
-            where: {
-                id: id,
-            } 
+        jwt.verify(object.token, secretKey, async function(err, decoded) {
+            if (err) return res.send(false);
+            if (!decoded.isAdmin) return res.send(false);
+            object = object.data;
+            let id = parseInt(object.id);
+            let price = parseInt(object.price);
+            if (isNaN(id) || object.name == null || object.description == null || isNaN(price) || object.url == null) return res.send(false);
+            let product = await db.Models.Sushi.update({
+                name: object.name,
+                description: object.description,
+                price: price,
+                url: object.url,
+            }, {
+                where: {
+                    id: id,
+                } 
+            });
+            res.send(object);
         });
-        res.send(object);
     });
     app.post('/goods/delete', async (req, res) => {
         let object = convertToObj(req.body);
 
-        let id = parseInt(object.id);
-        if (isNaN(id)) return res.send(false);
-        await db.Models.Sushi.destroy({
-            where: {
-                id: id,
-            } 
+        jwt.verify(object.token, secretKey, async function(err, decoded) {
+            if (err) return res.send(false);
+            if (!decoded.isAdmin) return res.send(false);
+            object = object.data;
+            let id = parseInt(object.id);
+            if (isNaN(id)) return res.send(false);
+            await db.Models.Sushi.destroy({
+                where: {
+                    id: id,
+                } 
+            });
+            res.send(true);
         });
-        res.send(true);
     });
 };
 

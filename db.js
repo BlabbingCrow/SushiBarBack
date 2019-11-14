@@ -5,7 +5,10 @@ let path = require('path');
 
 module.exports = {
     sequelize: null,
-    Models: {},
+    Models: {
+        Sushi: undefined,
+        User: undefined
+    },
     connect() {
         if (process.env.DATABASE_URL) {
             this.sequelize = new Sequelize(process.env.DATABASE_URL);

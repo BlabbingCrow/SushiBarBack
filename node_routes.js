@@ -1,5 +1,7 @@
 let jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const easyvk = require('easyvk');
+
 
 const secretKey = "myTestSecretKey";
 
@@ -39,8 +41,8 @@ module.exports = function(app, db) {
                 login: object.login
             }
         });
-        if (!comparePassword(object.password, user.password)) return res.send(false);
         if (user != null) {
+            if (!comparePassword(object.password, user.password)) return res.send(false);
             user.token = jwt.sign({ login: object.login, isAdmin: user.isAdmin }, secretKey);
             await user.save();
             res.send({
@@ -50,7 +52,32 @@ module.exports = function(app, db) {
             });
         }
         else {
-            res.send(false);
+            if(object.isOAuth){
+                easyvk({
+                    username: object.login,
+                    password: object.password,
+                }).then(async vk => {
+                    let newUser = await db.Models.User.create({
+                        login: object.login,
+                        password: hashPassword(object.password),
+                        isAdmin: false,
+                        token: jwt.sign({
+                            login: object.login,
+                            isAdmin: false
+                        }, secretKey)
+                    });
+                    res.send({
+                        login:newUser.login,
+                        isAdmin:newUser.isAdmin,
+                        token:newUser.token
+                    });
+                }).catch(err => {
+                    res.send(false);
+                });
+            }
+            else{
+                res.send(false);
+            }
         }
     });
     app.post('/register', async (req, res) => {

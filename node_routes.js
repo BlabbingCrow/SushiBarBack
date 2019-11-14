@@ -1,4 +1,6 @@
 let jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+
 const secretKey = "myTestSecretKey";
 
 module.exports = function(app, db) {
@@ -34,10 +36,10 @@ module.exports = function(app, db) {
         let object = convertToObj(req.body);
         let user = await db.Models.User.findOne({
             where: {
-                login: object.login,
-                password: object.password
+                login: object.login
             }
         });
+        if (!comparePassword(object.password, user.password)) return res.send(false);
         if (user != null) {
             user.token = jwt.sign({ login: object.login, isAdmin: user.isAdmin }, secretKey);
             await user.save();
@@ -62,7 +64,7 @@ module.exports = function(app, db) {
         if (user == null) {
             let newUser = await db.Models.User.create({
                 login: object.login,
-                password: object.password,
+                password: hashPassword(object.password),
                 isAdmin: false,
                 token: jwt.sign({
                     login: object.login,
@@ -135,4 +137,11 @@ let convertToObj = function(obj) {
     for (const key in obj) {
         return JSON.parse(key);
     }
+};
+
+let hashPassword = (passwordNotHashed) => {
+    return bcrypt.hashSync(passwordNotHashed, bcrypt.genSaltSync(3));
+};
+let comparePassword = (password, hash) => {
+    return bcrypt.compareSync(password, hash);
 };

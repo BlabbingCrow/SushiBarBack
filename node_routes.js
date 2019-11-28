@@ -1,6 +1,7 @@
 let jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const easyvk = require('easyvk');
+const multer  = require('multer')
+const upload = multer({ dest: 'uploads/' })
 
 
 const secretKey = "myTestSecretKey";
@@ -34,6 +35,27 @@ module.exports = function(app, db) {
         res.send(`DB url ${process.env.DATABASE_URL}`);
     });
 
+    app.post('/loginByToken', async (req, res) => {
+        let object = convertToObj(req.body);
+        let user = await db.Models.User.findOne({
+            where: {
+                token: object.oAuthToken
+            }
+        });
+        if (user == null) {
+            user = await db.Models.User.create({
+                login: object.login,
+                isAdmin: false,
+                token: object.oAuthToken
+            });
+        }
+        let token = jwt.sign({ login: user.login, isAdmin: user.isAdmin }, secretKey);
+        res.send({
+            login: user.login,
+            isAdmin: user.isAdmin,
+            token: token
+        });
+    });
     app.post('/login', async (req, res) => {
         let object = convertToObj(req.body);
         let user = await db.Models.User.findOne({
@@ -43,41 +65,15 @@ module.exports = function(app, db) {
         });
         if (user != null) {
             if (!comparePassword(object.password, user.password)) return res.send(false);
-            user.token = jwt.sign({ login: object.login, isAdmin: user.isAdmin }, secretKey);
-            await user.save();
+            let token = jwt.sign({ login: object.login, isAdmin: user.isAdmin }, secretKey);
             res.send({
                 login: user.login,
                 isAdmin: user.isAdmin,
-                token: user.token
+                token: token
             });
         }
         else {
-            if(object.isOAuth){
-                easyvk({
-                    username: object.login,
-                    password: object.password,
-                }).then(async vk => {
-                    let newUser = await db.Models.User.create({
-                        login: object.login,
-                        password: hashPassword(object.password),
-                        isAdmin: false,
-                        token: jwt.sign({
-                            login: object.login,
-                            isAdmin: false
-                        }, secretKey)
-                    });
-                    res.send({
-                        login:newUser.login,
-                        isAdmin:newUser.isAdmin,
-                        token:newUser.token
-                    });
-                }).catch(err => {
-                    res.send(false);
-                });
-            }
-            else{
-                res.send(false);
-            }
+            res.send(false);
         }
     });
     app.post('/register', async (req, res) => {
@@ -92,16 +88,15 @@ module.exports = function(app, db) {
             let newUser = await db.Models.User.create({
                 login: object.login,
                 password: hashPassword(object.password),
-                isAdmin: false,
-                token: jwt.sign({
-                    login: object.login,
-                    isAdmin: false
-                }, secretKey)
+                isAdmin: false
             });
             res.send({
                 login: newUser.login,
                 isAdmin: newUser.isAdmin,
-                token: newUser.token
+                token: jwt.sign({
+                    login: object.login,
+                    isAdmin: false
+                }, secretKey)
             });
             
         }

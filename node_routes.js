@@ -1,9 +1,11 @@
 let jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const multer  = require('multer')
-const upload = multer({ dest: 'uploads/' })
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 
 
+let PATH = __dirname + '\\uploads';
 const secretKey = "myTestSecretKey";
 
 module.exports = function(app, db) {
@@ -16,7 +18,7 @@ module.exports = function(app, db) {
         }
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
 
-        if (['/goods', '/goods/create', '/goods/update', '/goods/delete'].includes(req.originalUrl)) {
+        if (['/goods', '/goods/create', '/goods/update', '/goods/delete', '/saveData'].includes(req.originalUrl)) {
             let object = convertToObj(req.body);
             if (req.originalUrl === '/goods' && object.pageName !== "admin") {
                 return next();
@@ -106,8 +108,11 @@ module.exports = function(app, db) {
     });
 
     app.post('/goods', async (req, res) => {
-        let products = await db.Models.Sushi.findAll();
-        res.send(products);
+        let object = convertToObj(req.body);
+        object = object.data;
+        if (object == null || object.findText == null) object = {findText: ''};
+        let products = await db.sequelize.query(`SELECT * FROM searchInSushis('${object.findText}');`);
+        res.send(products[0]);
     });
     
     app.post('/goods/create', async (req, res) => {
@@ -153,12 +158,29 @@ module.exports = function(app, db) {
         });
         res.send(true);
     });
+    app.post('/upload', upload.single('file'), (req, res) => {
+        const { file } = req;
+        if(!file){
+            console.log('File null');
+            return res.send(false);
+        }
+        dropbox({
+            resource: 'files/upload',
+            parameters:{
+                path: '/' + file.originalname
+            },
+            readStream: fs.createReadStream(path.resolve(PATH, file.originalname))
+        }, (err, result, response) =>{
+            if (err) return console.log(err);
+
+            console.log('uploaded dropbox');
+            res.send(true);
+        });
+    });
 };
 
 let convertToObj = function(obj) {
-    for (const key in obj) {
-        return JSON.parse(key);
-    }
+    return JSON.parse(obj.data);
 };
 
 let hashPassword = (passwordNotHashed) => {
@@ -167,3 +189,16 @@ let hashPassword = (passwordNotHashed) => {
 let comparePassword = (password, hash) => {
     return bcrypt.compareSync(password, hash);
 };
+
+let storage = multer.diskStorage({
+    destination: (req, file, cb) =>{
+        console.log(PATH);
+        cb(null, PATH);
+    },
+    filename:(req, file, cb) => {
+        cb(null, file.originalname)
+    }
+});
+let upload = multer({
+    storage: storage,
+});

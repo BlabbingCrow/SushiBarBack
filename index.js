@@ -22,6 +22,7 @@ app.use(bodyParser.urlencoded({
 }));
 
 require('./node_routes')(app, db);
+require('./web_soket')(db);
 
 if (dropboxConfig.access_token) {
   global.dropbox = dropboxV2api.authenticate({

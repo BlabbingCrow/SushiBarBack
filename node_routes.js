@@ -31,6 +31,9 @@ module.exports = function(app, db) {
             next();
         }
     });
+    app.get('/test', (req, res) => {
+        res.send(process.env.DATABASE_URL);
+    });
     app.post('/loginByToken', async (req, res) => {
         let object = convertToObj(req.body);
         let user = await db.Models.User.findOne({

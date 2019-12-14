@@ -102,7 +102,7 @@ module.exports = function(app, db) {
     });
 
     app.post('/goods', async (req, res) => {
-        console.log("GOODS")
+        console.log("GOODS");
         let object = convertToObj(req.body);
         object = object.data;
         if (object == null || object.findText == null) object = {findText: ''};

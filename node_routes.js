@@ -102,7 +102,6 @@ module.exports = function(app, db) {
     });
 
     app.post('/goods', async (req, res) => {
-        console.log("GOODS");
         let object = convertToObj(req.body);
         object = object.data;
         if (object == null || object.findText == null) object = {findText: ''};
@@ -190,7 +189,6 @@ let comparePassword = (password, hash) => {
 
 let storage = multer.diskStorage({
     destination: (req, file, cb) =>{
-        console.log(PATH);
         cb(null, PATH);
     },
     filename:(req, file, cb) => {

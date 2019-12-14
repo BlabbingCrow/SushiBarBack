@@ -24,7 +24,6 @@ module.exports = (dbIn) => {
 };
 
 let updateProducts = () => {
-    console.log("UPDATE");
     wss.clients.forEach(async client => {
         let products = await db.Models.Sushi.findAll();
         client.send(JSON.stringify(products));

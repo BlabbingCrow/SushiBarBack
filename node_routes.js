@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 
+const updateProducts = require('./web_soket').updateProducts;
 
 let PATH = __dirname + '\\uploads';
 const secretKey = "myTestSecretKey";
@@ -18,11 +19,8 @@ module.exports = function(app, db) {
         }
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
 
-        if (['/goods', '/goods/create', '/goods/update', '/goods/delete', '/saveData'].includes(req.originalUrl)) {
+        if (['/goods/create', '/goods/update', '/goods/delete', '/saveData'].includes(req.originalUrl)) {
             let object = convertToObj(req.body);
-            if (req.originalUrl === '/goods' && object.pageName !== "admin") {
-                return next();
-            }
             jwt.verify(object.token, secretKey, async function(err, decoded) {
                 if (err) return res.send(false);
                 if (!decoded.isAdmin) return res.send(false);
@@ -33,10 +31,6 @@ module.exports = function(app, db) {
             next();
         }
     });
-    app.get('/testdb', async (req, res) => {
-        res.send(`DB url ${process.env.DATABASE_URL}`);
-    });
-
     app.post('/loginByToken', async (req, res) => {
         let object = convertToObj(req.body);
         let user = await db.Models.User.findOne({
@@ -108,6 +102,7 @@ module.exports = function(app, db) {
     });
 
     app.post('/goods', async (req, res) => {
+        console.log("GOODS")
         let object = convertToObj(req.body);
         object = object.data;
         if (object == null || object.findText == null) object = {findText: ''};
@@ -127,6 +122,7 @@ module.exports = function(app, db) {
             url: object.url,
         });
         res.send(product);
+        updateProducts();
     });
     app.post('/goods/update', async (req, res) => {
         let object = convertToObj(req.body);
@@ -145,6 +141,7 @@ module.exports = function(app, db) {
             }
         });
         res.send(object);
+        updateProducts();
     });
     app.post('/goods/delete', async (req, res) => {
         let object = convertToObj(req.body);
@@ -157,6 +154,7 @@ module.exports = function(app, db) {
             }
         });
         res.send(true);
+        updateProducts();
     });
     app.post('/upload', upload.single('file'), (req, res) => {
         const { file } = req;

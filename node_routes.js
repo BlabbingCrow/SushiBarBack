@@ -182,6 +182,7 @@ module.exports = function(app, db) {
         if (req.body.type === 'confirmation') {
             if (req.body.group_id === 189985510) {
                 res.send('139b4f2c');
+                return;
             }
         }
         res.send(false);

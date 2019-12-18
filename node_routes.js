@@ -210,7 +210,7 @@ module.exports = function(app, db) {
             connection.close();
         });
 
-        client.connect('wss://protected-journey-44243.herokuapp.com/', 'echo-protocol');
+        client.connect('wss://radiant-reef-23182.herokuapp.com/', 'echo-protocol');
 
         res.send('ok');
     });

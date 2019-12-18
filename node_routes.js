@@ -3,8 +3,7 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
-
-const updateProducts = require('./web_soket').updateProducts;
+const WebSocketClient  = require('websocket');
 
 let PATH = __dirname + '\\uploads';
 const secretKey = "myTestSecretKey";
@@ -124,7 +123,7 @@ module.exports = function(app, db) {
             url: object.url,
         });
         res.send(product);
-        updateProducts();
+        updateProducts(db);
     });
     app.post('/goods/update', async (req, res) => {
         let object = convertToObj(req.body);
@@ -143,7 +142,7 @@ module.exports = function(app, db) {
             }
         });
         res.send(object);
-        updateProducts();
+        updateProducts(db);
     });
     app.post('/goods/delete', async (req, res) => {
         let object = convertToObj(req.body);
@@ -156,7 +155,7 @@ module.exports = function(app, db) {
             }
         });
         res.send(true);
-        updateProducts();
+        updateProducts(db);
     });
     app.post('/upload', upload.single('file'), (req, res) => {
         const { file } = req;
@@ -201,3 +200,36 @@ let storage = multer.diskStorage({
 let upload = multer({
     storage: storage,
 });
+
+let updateProducts = (db) => {
+    const client = new WebSocketClient();
+
+    client.on('connectFailed', (error) => {
+        // tslint:disable-next-line: no-console
+        console.log('Connect Error: ' + error.toString());
+    });
+
+    client.on('connect', async (connection) => {
+        console.log('WebSocket Client Connected');
+        connection.on('error', (error) => {
+            console.log("Connection Error: " + error.toString());
+        });
+        connection.on('close', () => {
+            console.log('echo-protocol Connection Closed');
+        });
+        // connection.on('message', (message) => {
+        //     if (message.type === 'utf8') {
+        //         console.log("Received: '" + message.utf8Data + "'");
+        //     }
+        // });
+
+        let products = await db.Models.Sushi.findAll();
+        if (connection.connected) {
+            connection.sendUTF(JSON.stringify(products));
+        }
+
+        connection.close();
+    });
+
+    client.connect('wss://protected-journey-44243.herokuapp.com/', 'echo-protocol');
+};

@@ -176,6 +176,13 @@ module.exports = function(app, db) {
             res.send(true);
         });
     });
+
+    app.post('/vkcallback', (req, res) => {
+        console.log("VK message" + req.body);
+        if (req.body.type == "confirmation") {
+            res.send("139b4f2c");
+        }
+    });
 };
 
 let convertToObj = function(obj) {

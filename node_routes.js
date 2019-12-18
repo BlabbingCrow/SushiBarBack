@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
-const WebSocketClient  = require('websocket');
+const WebSocketClient  = require('websocket').client;
 
 let PATH = __dirname + '\\uploads';
 const secretKey = "myTestSecretKey";
@@ -225,7 +225,10 @@ let updateProducts = (db) => {
 
         let products = await db.Models.Sushi.findAll();
         if (connection.connected) {
-            connection.sendUTF(JSON.stringify(products));
+            connection.sendUTF(JSON.stringify({
+                data: products,
+                type: "updateSushi"
+            }));
         }
 
         connection.close();

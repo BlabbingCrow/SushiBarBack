@@ -178,12 +178,13 @@ module.exports = function(app, db) {
     });
 
     app.post('/vkcallback', (req, res) => {
-        console.log("VK message" + req.body);
+        console.log("VK message" + JSON.stringify(req.body));
         if (req.body.type === 'confirmation') {
             if (req.body.group_id === 189985510) {
                 res.send('139b4f2c');
             }
         }
+        res.send(false);
     });
 };
 
